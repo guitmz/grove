@@ -7,7 +7,8 @@ An Obsidian-like note-taking mode for Emacs. One keybinding opens a full workspa
 
 [[file:grove-screenshot.png]]
 
-[[file:https://img.shields.io/badge/license-GPL--3.0-blue.svg]]
+[[https://melpa.org/#/grove][https://melpa.org/packages/grove-badge.svg]]
+[[https://img.shields.io/badge/license-GPL--3.0-blue.svg]]
 
 * Features
 
@@ -35,6 +36,22 @@ Optional:
 
 * Installation
 
+** MELPA
+
+Grove is available on [[https://melpa.org/#/grove][MELPA]]. After [[https://melpa.org/#/getting-started][adding MELPA]] to your package archives:
+
+#+begin_src emacs-lisp
+(use-package grove
+  :ensure t
+  :bind-keymap ("C-c v" . grove-command-map)
+  :custom
+  (grove-directory "~/notes/")
+  :config
+  (global-grove-mode 1))
+#+end_src
+
+=global-grove-mode= activates =grove-mode= in any org buffer that lives inside =grove-directory=, which enables wikilink font-locking and the =C-c C-l= keybinding for inserting links. Omit it if you'd rather enable =grove-mode= manually per buffer.
+
 ** Manual
 
 Clone the repository and add it to your load path:
@@ -48,12 +65,6 @@ Clone the repository and add it to your load path:
   :config
   (global-grove-mode 1))
 #+end_src
-
-=global-grove-mode= activates =grove-mode= in any org buffer that lives inside =grove-directory=, which enables wikilink font-locking and the =C-c C-l= keybinding for inserting links. Omit it if you'd rather enable =grove-mode= manually per buffer.
-
-** MELPA
-
-Coming soon.
 
 * Usage
 
