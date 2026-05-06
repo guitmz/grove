@@ -10,6 +10,7 @@
 
 (require 'ert)
 (require 'grove-core)
+(require 'grove-backlink)
 (require 'grove-link)
 (require 'grove-inbox)
 (require 'grove-tree)
@@ -103,6 +104,44 @@
               (should (member "sub" items))
               (should (member "note" items))))
           (kill-buffer grove-tree-buffer-name))
+      (delete-directory grove-directory t))))
+
+(ert-deftest grove-tree-tracks-current-file-via-hooks ()
+  (let* ((grove-directory (make-temp-file "grove-vault" t))
+         (file-a (expand-file-name "a.org" grove-directory))
+         (file-b (expand-file-name "b.org" grove-directory)))
+    (unwind-protect
+        (progn
+          (with-temp-file file-a
+            (insert "#+title: A\n"))
+          (with-temp-file file-b
+            (insert "#+title: B\n"))
+          (with-current-buffer (get-buffer-create grove-tree-buffer-name)
+            (grove-tree-mode)
+            (setq grove-tree--ewoc t))
+          (cl-letf (((symbol-function 'ewoc-refresh) (lambda (&rest _) nil))
+                    ((symbol-function 'hl-line-highlight) (lambda (&rest _) nil)))
+            (grove-tree--enable-tracking)
+            (find-file file-a)
+            (grove-tree--track-current-file)
+            (with-current-buffer grove-tree-buffer-name
+              (should (equal grove-tree--current-file file-a)))
+            (find-file file-b)
+            (grove-tree--track-current-file)
+            (with-current-buffer grove-tree-buffer-name
+              (should (equal grove-tree--current-file file-b))))
+          (grove-tree--disable-tracking)
+          (kill-buffer grove-tree-buffer-name)
+          (when (buffer-file-name)
+            (kill-buffer (current-buffer))))
+      (delete-directory grove-directory t))))
+
+(ert-deftest grove-backlink-find-errors-when-ripgrep-is-missing ()
+  (let ((grove-directory (make-temp-file "grove-vault" t)))
+    (unwind-protect
+        (cl-letf (((symbol-function 'executable-find) (lambda (&rest _) nil)))
+          (should-error (grove-backlink--find "Note")
+                        :type 'user-error))
       (delete-directory grove-directory t))))
 
 (provide 'grove-review-test)

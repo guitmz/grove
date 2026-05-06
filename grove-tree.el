@@ -96,6 +96,9 @@ Requires a Nerd Font to be installed and active."
 (defconst grove-tree-buffer-name "*grove-tree*"
   "Name of the tree sidebar buffer.")
 
+(defvar grove-tree--tracking-enabled nil
+  "Non-nil when Grove is tracking the current file across window changes.")
+
 (defun grove-tree--indent-string (depth)
   "Return an indent guide string for DEPTH levels of nesting."
   (if (zerop depth)
@@ -339,6 +342,31 @@ insert its visible descendants."
               (goto-char pos)
               (hl-line-highlight))))))))
 
+(defun grove-tree--track-current-file (&rest _)
+  "Update the tree highlight to match the currently selected Grove file."
+  (when grove-tree--tracking-enabled
+    (let ((file (buffer-file-name (window-buffer (selected-window)))))
+      (when (grove-file-p file)
+        (grove-tree--set-current-file file)))))
+
+(defun grove-tree--enable-tracking ()
+  "Enable tree updates when the selected window changes."
+  (unless grove-tree--tracking-enabled
+    (add-hook 'window-selection-change-functions
+              #'grove-tree--track-current-file)
+    (add-hook 'buffer-list-update-hook
+              #'grove-tree--track-current-file)
+    (setq grove-tree--tracking-enabled t)))
+
+(defun grove-tree--disable-tracking ()
+  "Disable tree updates for current file tracking."
+  (when grove-tree--tracking-enabled
+    (remove-hook 'window-selection-change-functions
+                 #'grove-tree--track-current-file)
+    (remove-hook 'buffer-list-update-hook
+                 #'grove-tree--track-current-file)
+    (setq grove-tree--tracking-enabled nil)))
+
 ;;;; Mode
 
 (defvar grove-tree-mode-map
@@ -386,11 +414,13 @@ insert its visible descendants."
                       (no-delete-other-windows . t)))))))
       (when win
         (window-preserve-size win t t))
+      (grove-tree--enable-tracking)
       buf)))
 
 (defun grove-tree-close ()
   "Close the tree sidebar."
   (interactive)
+  (grove-tree--disable-tracking)
   (let ((win (get-buffer-window grove-tree-buffer-name)))
     (when win
       (delete-window win)))
