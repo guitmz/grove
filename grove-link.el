@@ -42,9 +42,9 @@
 ;;;; Font-lock
 
 (defconst grove-link--regexp
-  "\\[\\[\\([^]:\n]+\\)\\]\\]"
+  "\\[\\[\\([^]\n]+\\)\\]\\]"
   "Regexp matching grove wikilinks.
-Matches [[text]] but not [[protocol:text]] (standard org links).")
+Matches [[text]], including note titles containing colons.")
 
 (defvar grove-link--keymap
   (let ((map (make-sparse-keymap)))
@@ -57,15 +57,17 @@ Matches [[text]] but not [[protocol:text]] (standard org links).")
   "Font-lock matcher for grove wikilinks up to LIMIT.
 Adds the grove-link face and a clickable keymap."
   (while (re-search-forward grove-link--regexp limit t)
-    (let ((start (match-beginning 0))
-          (end (match-end 0)))
-      (add-text-properties
-       start end
-       (list 'face 'grove-link
-             'mouse-face 'highlight
-             'keymap grove-link--keymap
-             'help-echo (format "grove: %s" (match-string 1))
-             'grove-link-target (match-string 1)))))
+    (let ((target (match-string 1)))
+      (unless (grove--org-link-target-p target)
+        (let ((start (match-beginning 0))
+              (end (match-end 0)))
+          (add-text-properties
+           start end
+           (list 'face 'grove-link
+                 'mouse-face 'highlight
+                 'keymap grove-link--keymap
+                 'help-echo (format "grove: %s" target)
+                 'grove-link-target target))))))
   nil)
 
 (defun grove-link-setup-font-lock ()

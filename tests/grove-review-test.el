@@ -26,6 +26,26 @@
           (should (equal (plist-get meta :links) '("Late Link"))))
       (delete-file file))))
 
+(ert-deftest grove-parse-note-keeps-colon-titles-as-wikilinks ()
+  (let ((file (make-temp-file "grove-colon" nil ".org"
+                              "#+title: Link test\n\n[[Project: Alpha]]\n[[https://example.com]]\n")))
+    (unwind-protect
+        (should (equal (plist-get (grove--parse-note file) :links)
+                       '("Project: Alpha")))
+      (delete-file file))))
+
+(ert-deftest grove-link-fontify-allows-colons-in-note-titles ()
+  (with-temp-buffer
+    (insert "[[Project: Alpha]] [[https://example.com]]")
+    (goto-char (point-min))
+    (grove-link--fontify (point-max))
+    (goto-char (point-min))
+    (search-forward "[[Project: Alpha]]")
+    (should (equal (get-text-property (match-beginning 0) 'grove-link-target)
+                   "Project: Alpha"))
+    (search-forward "[[https://example.com]]")
+    (should-not (get-text-property (match-beginning 0) 'grove-link-target))))
+
 (ert-deftest grove-link-follow-creates-unique-file-on-filename-collision ()
   (let* ((grove-directory (make-temp-file "grove-vault" t))
          (existing (expand-file-name "foo.org" grove-directory)))

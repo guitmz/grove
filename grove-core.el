@@ -71,6 +71,16 @@ Each value is a plist with keys :title :tags :links :mtime.")
   "\\(?:^\\|[^[:alnum:]_#]\\)#\\([[:alnum:]_][[:alnum:]_/-]*\\)\\b"
   "Regexp matching inline hashtags in note content.")
 
+(defconst grove--org-link-protocol-regexp
+  "\\`[[:alpha:]][[:alnum:]+.-]*:"
+  "Regexp matching an Org-style link protocol prefix.")
+
+(defun grove--org-link-target-p (target)
+  "Return non-nil if TARGET looks like a standard Org link target.
+This excludes Grove wikilinks such as note titles containing colons."
+  (and (string-match-p grove--org-link-protocol-regexp target)
+       (not (string-match-p "[[:space:]]" target))))
+
 (defun grove--collect-inline-tags ()
   "Return inline hashtags from the current buffer.
 Matches #tag-style markers while ignoring Org keyword lines such as
@@ -159,8 +169,8 @@ Returns (:title TITLE :tags TAGS :links LINKS :mtime MTIME)."
       (goto-char (point-min))
       (while (re-search-forward "\\[\\[\\([^]]+\\)\\]\\]" nil t)
         (let ((link (match-string 1)))
-          ;; Skip standard org links (contain a colon protocol)
-          (unless (string-match-p ":" link)
+          ;; Skip standard org links like http: or file:
+          (unless (grove--org-link-target-p link)
             (push link links)))))
     (list :title (or title (file-name-sans-extension
                             (file-name-nondirectory file)))
