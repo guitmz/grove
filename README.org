@@ -97,12 +97,30 @@ Set your vault directory and press =C-c v v= to open the workspace.
 
 ** Capture
 
-=C-c v n= opens a blank org buffer. Type your note freely, then:
+=C-c v n= opens =*grove-capture*=, a blank org buffer. Type freely — no prompts, no template. The first line becomes the title; everything below becomes the body.
 
-- =C-c C-c= to save (first line becomes the title)
-- =C-c C-k= to discard
+- =C-c C-c= saves to the inbox
+- =C-c C-k= discards
 
-Notes are saved to the inbox subdirectory of your vault.
+For example, typing:
+
+#+begin_src org
+Project ideas for next quarter
+
+- migrate to ripgrep
+- add a graph view
+#+end_src
+
+and pressing =C-c C-c= writes =inbox/project-ideas-for-next-quarter.org=:
+
+#+begin_src org
+,#+title: Project ideas for next quarter
+
+- migrate to ripgrep
+- add a graph view
+#+end_src
+
+Filenames are derived from the title (lowercased, spaces to dashes). A numeric suffix is appended on collision.
 
 ** Graph
 
