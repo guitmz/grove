@@ -305,8 +305,23 @@ Directories come first, then files.  Hidden files are excluded."
           (erase-buffer)
           (setq grove-tree--ewoc
                 (ewoc-create #'grove-tree--print "" ""))
-          (dolist (node (grove-tree--list-entries grove-directory 0))
-            (ewoc-enter-last grove-tree--ewoc node)))))))
+          (grove-tree--populate grove-directory 0 nil))))))
+
+(defun grove-tree--populate (directory depth parent-node)
+  "Insert DIRECTORY entries at DEPTH after PARENT-NODE.
+If a directory is marked expanded in `grove-tree--expanded', recursively
+insert its visible descendants."
+  (let ((prev parent-node))
+    (dolist (node (grove-tree--list-entries directory depth))
+      (setq prev (if prev
+                     (ewoc-enter-after grove-tree--ewoc prev node)
+                   (ewoc-enter-last grove-tree--ewoc node)))
+      (when (and (grove-tree-node-directory-p node)
+                 (gethash (grove-tree-node-path node) grove-tree--expanded))
+        (setq prev (grove-tree--populate (grove-tree-node-path node)
+                                         (1+ depth)
+                                         prev))))
+    prev))
 
 ;;;; Current file tracking
 

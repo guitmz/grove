@@ -123,13 +123,29 @@ Matches #tag-style markers while ignoring Org keyword lines such as
       (make-directory path t))
     (file-name-as-directory path)))
 
+(defun grove--unique-path (directory filename)
+  "Return a unique file path in DIRECTORY for FILENAME.
+Appends a numeric suffix if the file already exists."
+  (let ((base (file-name-sans-extension filename))
+        (ext (file-name-extension filename t))
+        (path (expand-file-name filename directory)))
+    (if (not (file-exists-p path))
+        path
+      (let ((n 1))
+        (while (file-exists-p
+                (setq path (expand-file-name
+                            (concat base (format "-%d" n) ext)
+                            directory)))
+          (setq n (1+ n)))
+        path))))
+
 (defun grove--parse-note (file)
   "Parse an org FILE and return a metadata plist.
 Returns (:title TITLE :tags TAGS :links LINKS :mtime MTIME)."
   (let ((mtime (file-attribute-modification-time (file-attributes file)))
         title tags links)
     (with-temp-buffer
-      (insert-file-contents file nil 0 4096)
+      (insert-file-contents file)
       ;; Extract #+title:
       (goto-char (point-min))
       (when (re-search-forward "^#\\+title:\\s-*\\(.+\\)" nil t)

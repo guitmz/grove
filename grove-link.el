@@ -30,6 +30,8 @@
 
 (require 'grove-core)
 
+(declare-function grove--unique-path "grove-core" (directory filename))
+
 ;;;; Faces
 
 (defface grove-link
@@ -122,7 +124,7 @@ If the note doesn't exist, offer to create it."
         (find-file path)
       (if (y-or-n-p (format "Note \"%s\" not found.  Create it? " title))
           (let* ((filename (concat (grove--sanitize-filename title) ".org"))
-                 (path (expand-file-name filename grove-directory)))
+                 (path (grove--unique-path grove-directory filename)))
             (find-file path)
             (insert "#+title: " title "\n\n"))
         (message "Link not followed")))))
