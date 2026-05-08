@@ -122,6 +122,21 @@ and pressing =C-c C-c= writes =inbox/project-ideas-for-next-quarter.org=:
 
 Filenames are derived from the title (lowercased, spaces to dashes). A numeric suffix is appended on collision.
 
+** Inbox review
+
+=C-c v i= opens =*grove-inbox*=, a triage buffer that lists notes needing attention. The buffer groups notes by the reason they showed up — currently, *Untagged*: notes with no =#+filetags:= line and no inline =#hashtags=.
+
+| Key         | Action                       |
+|-------------+------------------------------|
+| =RET=       | Visit the note at point      |
+| =n= / =p=   | Move to next / previous line |
+| =g=         | Refresh the buffer           |
+| =q=         | Close the buffer             |
+
+The intended workflow is short loops: open the inbox, jump into a note with =RET=, add tags or wikilinks, save, and either come back with =C-c v i= or refresh in place with =g=. Notes drop off the list as you tag them, so the buffer doubles as a progress indicator.
+
+The list is built from the vault cache, so it covers your whole vault — not just files under =grove-inbox-directory=. Tag a note anywhere and it disappears from the next refresh.
+
 ** Graph
 
 =C-c v g= renders a graph of all notes and their =[[wikilinks]]= using Graphviz. Requires =dot= on your PATH.
