@@ -102,6 +102,7 @@ NOTES is a list of (TITLE . PATH)."
   (grove--ensure-directory)
   (grove--refresh-cache)
   (let* ((untagged (grove-inbox--untagged-notes))
+         (unlinked (grove-inbox--unlinked-notes))
          (buf (get-buffer-create grove-inbox-buffer-name)))
     (with-current-buffer buf
       (grove-inbox-mode)
@@ -115,9 +116,14 @@ NOTES is a list of (TITLE . PATH)."
         (grove-inbox--insert-section
          (format "Untagged (%d)" (length untagged))
          untagged)
+        (grove-inbox--insert-section
+         (format "No backlinks (%d)" (length unlinked))
+         unlinked)
         (goto-char (point-min))))
     (switch-to-buffer buf)
-    (message "Found %d untagged note(s)" (length untagged))))
+    (message "Found %d untagged and %d unlinked note(s)"
+             (length untagged)
+             (length unlinked))))
 
 (defun grove-inbox-close ()
   "Close the inbox review buffer."

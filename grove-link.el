@@ -30,6 +30,8 @@
 
 (require 'grove-core)
 
+(declare-function grove--unique-path "grove-core" (directory filename))
+
 ;;;; Faces
 
 (defface grove-link
@@ -40,9 +42,9 @@
 ;;;; Font-lock
 
 (defconst grove-link--regexp
-  "\\[\\[\\([^]:\n]+\\)\\]\\]"
+  "\\[\\[\\([^]\n]+\\)\\]\\]"
   "Regexp matching grove wikilinks.
-Matches [[text]] but not [[protocol:text]] (standard org links).")
+Matches [[text]], including note titles containing colons.")
 
 (defvar grove-link--keymap
   (let ((map (make-sparse-keymap)))
@@ -55,15 +57,17 @@ Matches [[text]] but not [[protocol:text]] (standard org links).")
   "Font-lock matcher for grove wikilinks up to LIMIT.
 Adds the grove-link face and a clickable keymap."
   (while (re-search-forward grove-link--regexp limit t)
-    (let ((start (match-beginning 0))
-          (end (match-end 0)))
-      (add-text-properties
-       start end
-       (list 'face 'grove-link
-             'mouse-face 'highlight
-             'keymap grove-link--keymap
-             'help-echo (format "grove: %s" (match-string 1))
-             'grove-link-target (match-string 1)))))
+    (let ((target (match-string 1)))
+      (unless (grove--org-link-target-p target)
+        (let ((start (match-beginning 0))
+              (end (match-end 0)))
+          (add-text-properties
+           start end
+           (list 'face 'grove-link
+                 'mouse-face 'highlight
+                 'keymap grove-link--keymap
+                 'help-echo (format "grove: %s" target)
+                 'grove-link-target target))))))
   nil)
 
 (defun grove-link-setup-font-lock ()
@@ -122,7 +126,7 @@ If the note doesn't exist, offer to create it."
         (find-file path)
       (if (y-or-n-p (format "Note \"%s\" not found.  Create it? " title))
           (let* ((filename (concat (grove--sanitize-filename title) ".org"))
-                 (path (expand-file-name filename grove-directory)))
+                 (path (grove--unique-path grove-directory filename)))
             (find-file path)
             (insert "#+title: " title "\n\n"))
         (message "Link not followed")))))
