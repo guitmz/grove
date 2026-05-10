@@ -178,11 +178,16 @@ Returns (:title TITLE :tags TAGS :links LINKS :mtime MTIME)."
           :links (nreverse links)
           :mtime mtime)))
 
+(defun grove--cacheable-note-p (file)
+  "Return non-nil when FILE should be included in the note cache."
+  (not (string-prefix-p ".#" (file-name-nondirectory file))))
+
 (defun grove--refresh-cache ()
   "Refresh the vault cache by scanning `grove-directory'.
 Only re-parses files whose mtime has changed."
   (grove--ensure-directory)
-  (let ((files (directory-files-recursively grove-directory "\\.org\\'"))
+  (let ((files (seq-filter #'grove--cacheable-note-p
+                           (directory-files-recursively grove-directory "\\.org\\'")))
         (seen (make-hash-table :test #'equal)))
     ;; Update or add entries
     (dolist (file files)
